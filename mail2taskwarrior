@@ -16,23 +16,42 @@ import email
 import sys
 import logging
 import os
-logging.basicConfig(
-    filename='/opt/mail2taskwarrior/log/mail2task.log',
-    filemode='a', level=logging.DEBUG
-)
 
-msg = email.message_from_file(sys.stdin)
 
-subject = email.header.make_header(email.header.decode_header(msg.get("Subject")))
-logging.debug(str(msg))
+def parseMessage():
+    '''Read <stdin> email format, and pull out the subject, then return the description'''
+    msg = email.message_from_file(sys.stdin)
 
-tdesc = str(subject).strip()
+    subject = email.header.make_header(email.header.decode_header(msg.get("Subject")))
+    logging.debug(str(msg))
 
-logging.debug("Description: " + str(tdesc))
-logging.debug("UserID: " + str(os.getuid()))
+    tdesc = str(subject).strip()
 
-w = TaskWarrior(config_filename="/var/spool/postfix/.taskrc")
-# Add the task, default a tag
-w.task_add(tdesc, tags=["email"])
-# Sync, so remote server is aware of our new task
-w.sync()
+    logging.debug("Description: " + str(tdesc))
+    return tdesc
+
+
+def addTask(tdesc):
+    ''' Logic that will add a task and sync it to the taskserver'''
+    w = TaskWarrior(config_filename="/var/spool/postfix/.taskrc")
+    # Add the task, default a tag
+    w.task_add(tdesc, tags=["email"])
+    # Sync, so remote server is aware of our new task
+    w.sync()
+
+
+def main():
+    '''Main function to call program logic'''
+    logging.basicConfig(
+        filename='/opt/mail2taskwarrior/log/mail2task.log',
+        filemode='a', level=logging.DEBUG
+    )
+
+    logging.debug("Executing as UserID: " + str(os.getuid()))
+    cmdstring = parseMessage()
+    logging.debug("Message: " + cmdstring)
+    addTask(cmdstring)
+
+
+if __name__ == '__main__':
+    main()
