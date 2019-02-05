@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+''' Read in an email piped from postfix and create a task '''
 #
 # Add a task to taskwarrior via email. Makes use of the taskw Python bindings.
 #
@@ -8,20 +9,30 @@
 # See README for more info.
 #
 
+# kellya: rewrote to handle direct piping from postfix's aliases rather than
+# rely on procmail or similar functionality
 from taskw import TaskWarrior
-import time
 import email
-import fileinput
+import sys
+import logging
+import os
+logging.basicConfig(
+    filename='/opt/mail2taskwarrior/log/mail2task.log',
+    filemode='a', level=logging.DEBUG)
+)
 
-msg_string = ""
-for line in fileinput.input():
-  msg_string += line
+msg = email.message_from_file(sys.stdin)
 
-msg = email.message_from_string(msg_string)
 subject = email.header.make_header(email.header.decode_header(msg.get("Subject")))
+logging.debug(str(msg))
 
 tdesc = str(subject).strip()
-tdue = str(int(time.time()))
 
-w = TaskWarrior()
-w.task_add(tdesc, due=tdue)
+logging.debug("Description: " + str(tdesc))
+logging.debug("UserID: " + str(os.getuid()))
+
+w = TaskWarrior(config_filename="/var/spool/postfix/.taskrc")
+# Add the task, default a tag
+w.task_add(tdesc + "+email")
+# Sync, so remote server is aware of our new task
+w.sync()
