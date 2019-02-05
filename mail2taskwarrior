@@ -19,19 +19,20 @@ import os
 
 
 def parseMessage():
+    '''Read <stdin> email format, and pull out the subject, then return the description'''
     msg = email.message_from_file(sys.stdin)
 
-    subject = email.header.make_header(
-        email.header.decode_header(msg.get("Subject"))
-    )
+    subject = email.header.make_header(email.header.decode_header(msg.get("Subject")))
     logging.debug(str(msg))
 
     tdesc = str(subject).strip()
 
     logging.debug("Description: " + str(tdesc))
+    return tdesc
 
 
 def addTask(tdesc):
+    ''' Logic that will add a task and sync it to the taskserver'''
     w = TaskWarrior(config_filename="/var/spool/postfix/.taskrc")
     # Add the task, default a tag
     w.task_add(tdesc, tags=["email"])
@@ -47,7 +48,9 @@ def main():
     )
 
     logging.debug("Executing as UserID: " + str(os.getuid()))
-    addTask(parseMessage())
+    cmdstring = parseMessage()
+    logging.debug("Message: " + cmdstring)
+    addTask(cmdstring)
 
 
 if __name__ == '__main__':
