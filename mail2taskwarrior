@@ -24,6 +24,9 @@ def parseMessage():
 
     subject = email.header.make_header(email.header.decode_header(msg.get("Subject")))
     logging.debug(str(msg))
+    for part in msg.walk():
+      if part.get_content_type() == 'text/plain':
+        logging.debug(str(part.get_payload().rstrip()))
 
     tdesc = str(subject).strip()
 
