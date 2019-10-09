@@ -1,7 +1,7 @@
 My fork of mail2taskwarrior.  Originally started because I needed to make it work from postfix's pipe command, but I have some bigger plans for this too.
 
 In my work, I had to setup an alternate email proxy, and used mxguarddog.
-[stop spam](http://mxguarddog.com/)
+[spam control](http://mxguarddog.com/)
 
 Add a task to taskwarrior via email. Makes use of the taskw Python bindings.
 
